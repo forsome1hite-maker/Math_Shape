@@ -1,0 +1,699 @@
+<title>둘레와 넓이 탐험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 모눈종이 위 색종이 도형 — 왼쪽 큰 칠판(애니메이션), 오른쪽 풀이 노트. 가로선=빨강, 세로선=초록, 숨은 선=보라 */
+:root{
+  --bg:#edf2f9; --card:#ffffff; --ink:#1c2742; --muted:#5d6b86; --line:#d3deec; --grid:#e3eaf4;
+  --shape:#ffe6a0; --accent:#2f62e0; --accent-ink:#ffffff;
+  --c1:#e8484a; --c2:#14937f; --c3:#7a4bd6; --c4:#e9820f;
+  --field:#9bd890; --field-edge:#5fae55; --road:#bcc3ce;
+  --ok:#14937f; --bad:#d23d3f;
+  --f-disp:"Jua","Noto Sans KR",system-ui,sans-serif;
+  --f-body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151f; --card:#171f2c; --ink:#e6ecf6; --muted:#9aa8bf; --line:#2a3546; --grid:#222c3b;
+  --shape:#5b4c22; --accent:#7096ff; --accent-ink:#0f151f;
+  --c1:#ff7471; --c2:#3cc9b4; --c3:#a988ff; --c4:#ffab4a;
+  --field:#2f6b38; --field-edge:#4f9a55; --road:#4a5468;
+  --ok:#3cc9b4; --bad:#ff7471; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f151f; --card:#171f2c; --ink:#e6ecf6; --muted:#9aa8bf; --line:#2a3546; --grid:#222c3b;
+  --shape:#5b4c22; --accent:#7096ff; --accent-ink:#0f151f;
+  --c1:#ff7471; --c2:#3cc9b4; --c3:#a988ff; --c4:#ffab4a;
+  --field:#2f6b38; --field-edge:#4f9a55; --road:#4a5468;
+  --ok:#3cc9b4; --bad:#ff7471; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-block:28px 4px}
+.eyebrow{margin:0;font-size:.82rem;letter-spacing:.08em;color:var(--muted);font-weight:700}
+h1{font-family:var(--f-disp);font-weight:400;font-size:clamp(2rem,5.5vw,3rem);line-height:1.15;margin:.15em 0 .2em;text-wrap:balance}
+h1 .m{color:var(--c1)} h1 .n{color:var(--c2)}
+.lede{margin:0;max-width:62ch;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-block:20px 18px}
+@media (max-width:1100px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tab{display:flex;gap:8px;align-items:center;padding:10px 12px;border:2px solid var(--line);background:var(--card);border-radius:14px;cursor:pointer;text-align:left;color:var(--ink);font:inherit;min-width:0}
+.tab:hover{border-color:var(--muted)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tab[aria-selected="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card))}
+.tab svg{width:34px;height:34px;flex:none}
+.tab svg .ic{fill:var(--shape);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
+.tab svg .icf{fill:var(--field);stroke:var(--field-edge);stroke-width:1}
+.tab .tt{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.tab .tn{font-family:var(--f-disp);font-size:1.02rem;word-break:keep-all}
+.tab .tk{font-size:.78rem;color:var(--muted)}
+.lab{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.lab{grid-template-columns:minmax(0,1fr)}}
+.board,.box{background:var(--card);border:1px solid var(--line);border-radius:18px}
+.board{padding:16px;position:relative;min-width:0}
+.board-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:6px}
+.kind{font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:99px;letter-spacing:.04em}
+.kind.per{background:color-mix(in srgb,var(--c1) 15%,transparent);color:var(--c1)}
+.kind.area{background:color-mix(in srgb,var(--c2) 15%,transparent);color:var(--c2)}
+.board-head h2{font-family:var(--f-disp);font-weight:400;font-size:1.45rem;margin:0;flex:1 1 auto;min-width:0}
+.ghost{font:inherit;font-size:.9rem;font-weight:500;color:var(--ink);background:transparent;border:1.5px solid var(--line);padding:6px 12px;border-radius:10px;cursor:pointer}
+.ghost:hover{border-color:var(--muted)}
+.q{margin:0 0 4px;color:var(--muted)}
+#stage{width:100%;height:auto;max-height:560px;display:block;touch-action:manipulation}
+.board-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.85rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px}
+.legend i{display:inline-block;width:18px;height:5px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.chip{font-family:var(--f-disp);font-size:1.25rem;color:var(--accent-ink);background:var(--accent);padding:4px 16px;border-radius:99px;animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.box{padding:16px 18px}
+.box h3{font-family:var(--f-disp);font-weight:400;font-size:1.15rem;margin:0 0 8px}
+.try form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.try input{font:inherit;font-size:1.1rem;width:7.5em;padding:6px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.try .unit{font-weight:700}
+.fb{margin:8px 0 0;font-size:.95rem;min-height:1.6em}
+.fb.ok{color:var(--ok);font-weight:700} .fb.bad{color:var(--bad)}
+.stephead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.stepno{font-weight:700;font-size:.85rem;color:var(--accent);letter-spacing:.04em}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots button{width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);background:transparent;padding:0;cursor:pointer}
+.dots button.on{background:var(--accent)}
+.say{font-size:1.06rem;margin:0;min-height:7.2em}
+.say b{color:var(--accent)}
+.say .r{color:var(--c1);font-weight:700} .say .g{color:var(--c2);font-weight:700} .say .v{color:var(--c3);font-weight:700} .say .o{color:var(--c4);font-weight:700}
+.controls{display:grid;grid-template-columns:1fr 1.2fr 1.4fr;gap:8px;margin-top:12px}
+.btn{font:inherit;font-weight:700;font-size:.95rem;padding:10px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+.notes ol{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.notes li::marker{color:var(--muted);font-weight:700}
+.notes li b{color:var(--accent)}
+.notes .empty{margin:0;color:var(--muted);font-size:.92rem}
+.ideas{margin-block:26px 40px}
+.ideas h2{font-family:var(--f-disp);font-weight:400;font-size:1.5rem;margin:0 0 12px}
+.idea-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.idea-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.idea-grid{grid-template-columns:minmax(0,1fr)}}
+.idea{padding:14px 16px;border-top:4px solid var(--line);background:var(--card);border-radius:4px 4px 14px 14px}
+.idea h3{font-family:var(--f-disp);font-weight:400;font-size:1.1rem;margin:0 0 4px}
+.idea p{margin:0;font-size:.93rem;color:var(--muted)}
+.idea.i1{border-top-color:var(--c1)} .idea.i2{border-top-color:var(--c2)} .idea.i3{border-top-color:var(--c4)} .idea.i4{border-top-color:var(--c3)}
+
+/* SVG */
+#stage .grid line{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke}
+#stage .shape{fill:var(--shape);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#stage .hl{fill:none;stroke-width:7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#stage .hl.c1{stroke:var(--c1)} #stage .hl.c2{stroke:var(--c2)} #stage .hl.c3{stroke:var(--c3)}
+#stage .hl.cut{stroke:var(--ink);stroke-width:.09;stroke-dasharray:.28 .18;stroke-linecap:butt;vector-effect:none}
+#stage .dim-line{stroke:var(--muted);stroke-width:1.2;vector-effect:non-scaling-stroke}
+#stage .dim-text{font-family:var(--f-body);font-weight:700;font-size:.52px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.22px;stroke-linejoin:round}
+#stage .dim.acc .dim-line{stroke:var(--accent)} #stage .dim.acc .dim-text{fill:var(--accent)}
+#stage .dim.vio .dim-line{stroke:var(--c3)} #stage .dim.vio .dim-text{fill:var(--c3)}
+#stage .qmark{font-family:var(--f-disp);font-size:.62px;fill:var(--c3);text-anchor:middle;dominant-baseline:central}
+#stage .fillA{fill:var(--c1);fill-opacity:.16}
+#stage .fillB{fill:var(--c2);fill-opacity:.16}
+#stage .fillX{fill:var(--c4);fill-opacity:.32;stroke:var(--c4);stroke-width:2;vector-effect:non-scaling-stroke}
+#stage .fillV{fill:var(--c3);fill-opacity:.55}
+#stage .cell{fill-opacity:.5}
+#stage .cell.c1{fill:var(--c1)} #stage .cell.c2{fill:var(--c2)} #stage .cell.cw{fill:var(--card);fill-opacity:.55}
+#stage .badge{font-family:var(--f-disp);font-size:.62px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.2px;stroke-linejoin:round}
+#stage .field{fill:var(--field);stroke:var(--field-edge);stroke-width:1.5;vector-effect:non-scaling-stroke}
+#stage .road{fill:var(--road)}
+#stage .roadline{stroke:var(--card);stroke-width:.07;stroke-dasharray:.3 .25}
+#stage .outline{fill:none;stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke}
+#stage .outline-dash{fill:none;stroke:var(--accent);stroke-width:.08;stroke-dasharray:.28 .16}
+#stage .hlrect{fill:none;stroke:var(--accent);stroke-width:5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#stage .pulse{animation:pulse .5s ease-in-out 2}
+@keyframes pulse{50%{stroke-width:14}}
+@media (prefers-reduced-motion: reduce){#stage .pulse,.chip{animation:none}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">초등 5학년 · 다각형의 둘레와 넓이 · 심화</p>
+    <h1><span class="m">둘레</span>와 <span class="n">넓이</span> 탐험</h1>
+    <p class="lede">울퉁불퉁한 도형도 선을 옮기고, 나누고, 빼고, 모으면 쉽게 풀 수 있어요. 문제를 고른 다음 <b>다음 ▶</b>을 눌러 그림이 움직이는 것을 보며 한 단계씩 따라가 보세요.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" role="tablist" aria-label="문제 고르기">
+    <button class="tab" role="tab" id="tab-notch" data-id="notch">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="ic" points="2,5 9,5 9,11 15,11 15,5 22,5 22,19 2,19"/></svg>
+      <span class="tt"><span class="tn">이 빠진 직사각형</span><span class="tk">둘레 구하기</span></span>
+    </button>
+    <button class="tab" role="tab" id="tab-stairs" data-id="stairs">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="ic" points="2,4 8,4 8,9 14,9 14,14 22,14 22,20 2,20"/></svg>
+      <span class="tt"><span class="tn">계단 모양</span><span class="tk">둘레 구하기</span></span>
+    </button>
+    <button class="tab" role="tab" id="tab-ell" data-id="ell">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="ic" points="3,3 9,3 9,15 21,15 21,21 3,21"/></svg>
+      <span class="tt"><span class="tn">L자 모양</span><span class="tk">넓이 구하기</span></span>
+    </button>
+    <button class="tab" role="tab" id="tab-tee" data-id="tee">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="ic" points="2,4 22,4 22,9 15,9 15,21 9,21 9,9 2,9"/></svg>
+      <span class="tt"><span class="tn">T자 모양</span><span class="tk">넓이 구하기</span></span>
+    </button>
+    <button class="tab" role="tab" id="tab-dieut" data-id="dieut">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="ic" points="3,3 21,3 21,8 9,8 9,16 21,16 21,21 3,21"/></svg>
+      <span class="tt"><span class="tn">ㄷ자 모양</span><span class="tk">넓이 구하기</span></span>
+    </button>
+    <button class="tab" role="tab" id="tab-cross" data-id="cross">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect class="icf" x="2" y="4" width="8" height="6"/><rect class="icf" x="13" y="4" width="9" height="6"/><rect class="icf" x="2" y="12" width="8" height="8"/><rect class="icf" x="13" y="12" width="9" height="8"/></svg>
+      <span class="tt"><span class="tn">십자 길 꽃밭</span><span class="tk">넓이 구하기</span></span>
+    </button>
+  </nav>
+
+  <section class="lab">
+    <div class="board">
+      <div class="board-head">
+        <span class="kind" id="kind">둘레</span>
+        <h2 id="ptitle">문제</h2>
+        <button class="ghost" id="shuffle" type="button">🎲 숫자 바꾸기</button>
+      </div>
+      <p class="q" id="pq"></p>
+      <svg id="stage" role="img" aria-label="도형 그림"></svg>
+      <div class="board-foot">
+        <span class="legend" id="legend"></span>
+        <span class="chip" id="chip" hidden></span>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="box try">
+        <h3>먼저 풀어 볼까요?</h3>
+        <form id="tryform" autocomplete="off">
+          <input id="ans" inputmode="numeric" pattern="[0-9]*" aria-label="내 답">
+          <span class="unit" id="unit">cm</span>
+          <button class="btn primary" type="submit">확인</button>
+        </form>
+        <p class="fb" id="fb" aria-live="polite"></p>
+      </div>
+
+      <div class="box">
+        <div class="stephead">
+          <span class="stepno" id="stepno">1 / 5 단계</span>
+          <div class="dots" id="dots"></div>
+        </div>
+        <p class="say" id="say" aria-live="polite"></p>
+        <div class="controls">
+          <button class="btn" id="prev" type="button">◀ 이전</button>
+          <button class="btn" id="play" type="button">▶ 자동</button>
+          <button class="btn primary" id="next" type="button">다음 ▶</button>
+        </div>
+      </div>
+
+      <div class="box notes">
+        <h3>풀이 노트</h3>
+        <div id="notes"></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="ideas">
+    <h2>오늘 배운 네 가지 비법</h2>
+    <div class="idea-grid">
+      <div class="idea i1"><h3>선 옮기기 (둘레)</h3><p>선을 평행하게 옮겨도 길이는 변하지 않아요. 흩어진 가로선, 세로선을 모아 직사각형으로 만들어요.</p></div>
+      <div class="idea i2"><h3>나누기 (넓이)</h3><p>복잡한 도형을 직사각형 여러 개로 잘라서 각각의 넓이를 더해요.</p></div>
+      <div class="idea i3"><h3>빼기 (넓이)</h3><p>큰 직사각형을 먼저 그리고, 비어 있는 부분의 넓이를 빼요.</p></div>
+      <div class="idea i4"><h3>모으기 (넓이)</h3><p>길처럼 빈 곳을 없애고 조각을 밀어 붙이면 하나의 직사각형이 돼요.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const svg = $('stage');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- 작은 도구들 ---------- */
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const parts = (total,k,min) => { const a = Array(k).fill(min); let rest = total-k*min; while(rest-- > 0) a[ri(0,k-1)]++; return a; };
+const cum = a => a.reduce((acc,v)=>(acc.push(acc[acc.length-1]+v),acc),[0]);
+const lerp = (a,b,t) => a+(b-a)*t;
+const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(parent) parent.appendChild(e); return e; }
+const seg = (x1,y1,x2,y2,cls,g) => el('line',{x1,y1,x2,y2,class:cls},g);
+const txt = (x,y,s,cls,g) => { const t = el('text',{x,y,class:cls},g); t.textContent = s; return t; };
+const poly = (pts,cls,g) => el('polygon',{points:pts.map(p=>p.join(',')).join(' '),class:cls},g);
+const rect = (x,y,w,h,cls,g) => el('rect',{x,y,width:w,height:h,class:cls},g);
+const setO = (e,o) => { e._o = o; e.style.opacity = o; return e; };
+
+/* ---------- 애니메이션 엔진 ---------- */
+let RUN = 0, INSTANT = false;
+function tween(ms, fn){
+  const my = RUN;
+  if(INSTANT || reduce || ms <= 0){ fn(1); return Promise.resolve(); }
+  return new Promise(res => {
+    const t0 = performance.now();
+    const f = now => {
+      if(my !== RUN) return;           // 다른 단계로 넘어가면 조용히 멈춤
+      const t = Math.min(1,(now-t0)/ms);
+      fn(ease(t));
+      t < 1 ? requestAnimationFrame(f) : res();
+    };
+    requestAnimationFrame(f);
+  });
+}
+const wait = ms => tween(ms, ()=>{});
+const all = (...p) => Promise.all(p);
+function fade(els,to,ms=400){ els=[].concat(els); const from = els.map(e=>e._o ?? 1); return tween(ms,t=>els.forEach((e,i)=>setO(e,lerp(from[i],to,t)))); }
+function hl(g,x1,y1,x2,y2,cls){ const L = seg(x1,y1,x1,y1,'hl '+cls,g); L._c=[x1,y1,x2,y2]; return L; }
+function grow(Ls,ms=600){ Ls=[].concat(Ls); return tween(ms,t=>Ls.forEach(L=>{ const [x1,y1,x2,y2]=L._c; L.setAttribute('x2',lerp(x1,x2,t)); L.setAttribute('y2',lerp(y1,y2,t)); })); }
+function slide(items,ms=900){
+  const from = items.map(it=>it.L._c.slice());
+  return tween(ms,t=>items.forEach((it,i)=>{
+    const [x1,y1,x2,y2]=from[i], dx=it.dx*t, dy=it.dy*t;
+    it.L.setAttribute('x1',x1+dx); it.L.setAttribute('y1',y1+dy); it.L.setAttribute('x2',x2+dx); it.L.setAttribute('y2',y2+dy);
+    if(t===1) it.L._c=[x1+it.dx,y1+it.dy,x2+it.dx,y2+it.dy];
+  }));
+}
+function shift(items,ms=900){
+  const from = items.map(it=>it.g._t || [0,0]);
+  return tween(ms,t=>items.forEach((it,i)=>{
+    const x=lerp(from[i][0],it.x,t), y=lerp(from[i][1],it.y,t);
+    it.g._t=[x,y]; it.g.setAttribute('transform',`translate(${x} ${y})`);
+  }));
+}
+function pulse(Ls){ Ls=[].concat(Ls); if(INSTANT||reduce) return Promise.resolve(); Ls.forEach(L=>{L.classList.remove('pulse'); void L.getBBox(); L.classList.add('pulse');}); return wait(1000); }
+function cells(g,x,y,w,h,cls){ const G=el('g',{},g); G._cells=[]; for(let r=0;r<h;r++) for(let c=0;c<w;c++){ const R=el('rect',{x:x+c+.08,y:y+r+.08,width:.84,height:.84,rx:.12,class:'cell '+cls},G); R.style.opacity=0; G._cells.push(R);} return G; }
+function reveal(G,ms=1200){ const a=G._cells; let n=0; return tween(ms,t=>{ const k=Math.round(t*a.length); while(n<k){ a[n].style.opacity=1; n++; } }); }
+
+/* 치수선: 가로면 off만큼 위/아래, 세로면 off만큼 왼/오른쪽 */
+function dim(g,x1,y1,x2,y2,label,off,extra=''){
+  const G = el('g',{class:'dim '+extra},g);
+  const H = y1===y2, ox = H?0:off, oy = H?off:0, k=.2;
+  const a=[x1+ox,y1+oy], b=[x2+ox,y2+oy];
+  seg(a[0],a[1],b[0],b[1],'dim-line',G);
+  if(H){ seg(a[0],a[1]-k,a[0],a[1]+k,'dim-line',G); seg(b[0],b[1]-k,b[0],b[1]+k,'dim-line',G); }
+  else { seg(a[0]-k,a[1],a[0]+k,a[1],'dim-line',G); seg(b[0]-k,b[1],b[0]+k,b[1],'dim-line',G); }
+  G._t = txt((a[0]+b[0])/2,(a[1]+b[1])/2,label,'dim-text',G);
+  return G;
+}
+
+/* ---------- 문제들 ---------- */
+const P = {};
+
+P.notch = {
+  name:'이 빠진 직사각형', kind:'둘레', unit:'cm', m:[1.8,1.3,1.6,1.8],
+  legend:[['c1','가로선'],['c2','세로선'],['c3','숨은 선']],
+  sample:{W:10,H:6,n:2,d:3,x:4},
+  gen(){ const W=ri(8,12), H=ri(5,7), n=ri(2,3), d=ri(2,H-2), x=ri(2,W-n-2); return {W,H,n,d,x}; },
+  size:p=>[p.W,p.H],
+  ans:p=>2*(p.W+p.H)+2*p.d,
+  q:p=>`직사각형 위쪽에 홈이 파인 도형이에요. 이 도형의 둘레는 몇 cm일까요?`,
+  hint(p,v){ if(v===2*(p.W+p.H)) return '아까워요! 홈 안쪽의 세로선 2개를 빠뜨리지 않았나요?'; if(v===2*(p.W+p.H)+2*p.d+2*p.n||v===2*(p.W+p.H)+2*p.d-2*p.n) return '홈의 가로 길이는 다시 생각해 봐요. 홈 바닥을 위로 올려 보면 어떨까요?'; },
+  build(p,S){ const {W,H,n,d,x}=p;
+    poly([[0,0],[x,0],[x,d],[x+n,d],[x+n,0],[W,0],[W,H],[0,H]],'shape',S.base);
+    dim(S.lab,0,H,W,H,`${W} cm`,.9);
+    dim(S.lab,0,0,0,H,`${H} cm`,-.9);
+    S.r.dn = dim(S.lab,x,0,x+n,0,`${n} cm`,-.9);
+    dim(S.lab,x+n/2,0,x+n/2,d,`${d} cm`,0);
+  },
+  steps(p){ const {W,H,n,d,x}=p, A=this.ans(p); return [
+    {say:`모눈 한 칸은 1 cm예요. 직사각형의 위쪽이 이가 빠진 것처럼 쏙 들어갔어요. 이 도형의 <b>둘레</b>, 즉 테두리 전체의 길이는 몇 cm일까요?`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`위쪽에 있는 <span class="r">가로선 3개</span>를 찾아요. 홈 바닥의 선을 위로 쭉 올리면 세 선이 한 줄로 이어져서 <b>아래쪽 가로와 같은 ${W} cm</b>가 돼요.`,
+     note:`위쪽 가로선 3개의 합 = ${W} cm`,
+     run:async S=>{ const a=hl(S.over,0,0,x,0,'c1'), b=hl(S.over,x,d,x+n,d,'c1'), c=hl(S.over,x+n,0,W,0,'c1');
+       await grow([a,b,c],650); await wait(250); await slide([{L:b,dx:0,dy:-d}],900);
+       const D=setO(dim(S.lab,0,0,W,0,`${W} cm`,-.9,'acc'),0); await all(fade(S.r.dn,0,300),fade(D,1,450)); }},
+    {say:`아래쪽 가로는 ${W} cm예요. 그래서 <span class="r">가로선</span>을 모두 더하면 ${W} × 2 = ${2*W} cm예요.`,
+     note:`가로선의 합 = ${W} × 2 = ${2*W} cm`,
+     run:async S=>{ await grow(hl(S.over,0,H,W,H,'c1'),650); }},
+    {say:`이제 <span class="g">세로선</span>이에요. 왼쪽 세로가 ${H} cm이니까 마주 보는 오른쪽 세로도 ${H} cm예요.`,
+     note:`바깥 세로선의 합 = ${H} × 2 = ${2*H} cm`,
+     run:async S=>{ await grow([hl(S.over,0,0,0,H,'c2'),hl(S.over,W,0,W,H,'c2')],650); }},
+    {say:`잠깐! 아직 색칠하지 않은 선이 있어요. 바로 <span class="v">홈 안쪽의 세로선 2개</span>예요. 하나가 ${d} cm이니까 둘을 더하면 ${2*d} cm예요.`,
+     note:`홈 안쪽 세로선의 합 = ${d} × 2 = ${2*d} cm`,
+     run:async S=>{ const L=[hl(S.over,x,0,x,d,'c3'),hl(S.over,x+n,0,x+n,d,'c3')]; await grow(L,600); await pulse(L); }},
+    {final:true,
+     say:`모두 더하면 둘레는 <b>${A} cm</b>예요. 홈의 가로 ${n} cm는 쓰지 않았어요! 홈을 파도 가로선의 합은 그대로이고, <span class="v">안쪽 세로선</span>만 늘어나요.`,
+     note:`둘레 = ${2*W} + ${2*H} + ${2*d} = <b>${A} cm</b>`,
+     run:async S=>{ await pulse([...S.over.querySelectorAll('.hl')]); }},
+  ];}
+};
+
+P.stairs = {
+  name:'계단 모양', kind:'둘레', unit:'cm', m:[1.8,1.8,1.6,1.8],
+  legend:[['c1','가로선'],['c2','세로선']],
+  sample:{W:10,H:7,a:[3,4,3],b:[2,3,2]},
+  gen(){ const W=ri(8,12), H=ri(6,9); return {W,H,a:parts(W,3,2),b:parts(H,3,2)}; },
+  size:p=>[p.W,p.H],
+  ans:p=>2*(p.W+p.H),
+  q:p=>`계단 모양 도형이에요. 계단 한 칸의 길이를 몰라도 둘레를 구할 수 있을까요?`,
+  hint(p,v){ if(v===p.W+p.H) return '가로와 세로를 한 번씩만 더했어요. 가로선과 세로선이 각각 두 번씩 있어요!'; if(v===p.W*p.H) return '그건 넓이를 구하는 방법이에요. 둘레는 테두리의 길이예요.'; },
+  build(p,S){ const {W,H,a}=p, xs=cum(p.a), ys=cum(p.b), pts=[];
+    for(let i=0;i<a.length;i++){ pts.push([xs[i],ys[i]],[xs[i+1],ys[i]]); }
+    pts.push([W,H],[0,H]);
+    poly(pts,'shape',S.base);
+    dim(S.lab,0,H,W,H,`${W} cm`,.9);
+    dim(S.lab,0,0,0,H,`${H} cm`,-.9);
+    S.r.qh=[]; S.r.qv=[];
+    for(let i=0;i<a.length;i++){
+      S.r.qh.push(txt((xs[i]+xs[i+1])/2,ys[i]-.45,'?','qmark',S.lab));
+      S.r.qv.push(txt(xs[i+1]+.45,(ys[i]+ys[i+1])/2,'?','qmark',S.lab));
+    }
+  },
+  steps(p){ const {W,H,a}=p, xs=cum(p.a), ys=cum(p.b), A=this.ans(p), k=a.length; return [
+    {say:`계단 모양 도형이에요. 계단 한 칸 한 칸의 길이는 <span class="v">?</span>로 적혀 있어서 알 수 없어요. 그래도 둘레를 구할 수 있을까요?`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`계단의 <span class="r">가로선</span>을 모두 위로 쭉 올려 볼게요. 빈틈 없이 이어져서 <b>아래쪽 가로 ${W} cm</b>와 길이가 같아져요.`,
+     note:`계단의 가로선을 모두 더하면 ${W} cm`,
+     run:async S=>{ const L=[...Array(k)].map((_,i)=>hl(S.over,xs[i],ys[i],xs[i+1],ys[i],'c1'));
+       await grow(L,600); await fade(S.r.qh,0,250);
+       await slide(L.map((l,i)=>({L:l,dx:0,dy:-ys[i]})),1000);
+       const D=setO(dim(S.lab,0,0,W,0,`${W} cm`,-.9,'acc'),0); await fade(D,1,450); }},
+    {say:`이번에는 계단의 <span class="g">세로선</span>을 모두 오른쪽으로 쭉 밀어요. 이어 붙이면 <b>왼쪽 세로 ${H} cm</b>와 같아요.`,
+     note:`계단의 세로선을 모두 더하면 ${H} cm`,
+     run:async S=>{ const L=[...Array(k)].map((_,i)=>hl(S.over,xs[i+1],ys[i],xs[i+1],ys[i+1],'c2'));
+       await grow(L,600); await fade(S.r.qv,0,250);
+       await slide(L.map((l,i)=>({L:l,dx:W-xs[i+1],dy:0})),1000);
+       const D=setO(dim(S.lab,W,0,W,H,`${H} cm`,.9,'acc'),0); await fade(D,1,450); }},
+    {say:`아래쪽 가로와 왼쪽 세로까지 칠하면, 이 도형의 둘레는 가로 ${W} cm, 세로 ${H} cm인 <b>직사각형의 둘레와 똑같아요!</b>`,
+     note:`둘레 = (${W} + ${H}) × 2`,
+     run:async S=>{ const box=setO(rect(0,0,W,H,'outline-dash',S.over),0);
+       await all(grow([hl(S.over,0,H,W,H,'c1'),hl(S.over,0,0,0,H,'c2')],650),fade(box,1,650)); }},
+    {final:true,
+     say:`둘레는 (${W} + ${H}) × 2 = <b>${A} cm</b>예요. 계단이 몇 칸이든, 한 칸의 길이가 얼마든 같은 방법으로 풀 수 있어요.`,
+     note:`둘레 = ${W+H} × 2 = <b>${A} cm</b>`,
+     run:async S=>{ await pulse([...S.over.querySelectorAll('.hl')]); }},
+  ];}
+};
+
+P.tee = {
+  name:'T자 모양', kind:'넓이', unit:'cm²', m:[1.8,1.8,1.6,1.8],
+  legend:[['c1','①'],['c2','②'],['c4','빈 곳']],
+  sample:{A:10,b:3,c:4,e:5},
+  gen(){ const A=ri(8,12), c=pick([2,3,4,5].filter(c=>(A-c)%2===0&&(A-c)/2>=2)); return {A,b:ri(2,3),c,e:ri(4,6)}; },
+  size:p=>[p.A,p.b+p.e],
+  ans:p=>p.A*p.b+p.c*p.e,
+  q:p=>`직사각형 두 개가 T자 모양으로 붙어 있어요. 이 도형의 넓이는 몇 cm²일까요?`,
+  hint(p,v){ const T=p.b+p.e; if(v===p.A*T) return '빈 곳까지 넓이에 넣었어요. T자 양옆의 빈 곳을 빼야 해요!'; if(v===p.A*p.b+p.c*T) return '아래쪽 직사각형의 세로를 전체 높이로 계산했어요. 위쪽과 겹치는 부분을 빼야 해요.'; },
+  build(p,S){ const {A,b,c,e}=p, s=(A-c)/2, T=b+e;
+    poly([[0,0],[A,0],[A,b],[s+c,b],[s+c,T],[s,T],[s,b],[0,b]],'shape',S.base);
+    dim(S.lab,0,0,A,0,`${A} cm`,-.9);
+    dim(S.lab,A,0,A,b,`${b} cm`,.9);
+    dim(S.lab,s,T,s+c,T,`${c} cm`,.9);
+    dim(S.lab,0,0,0,T,`${T} cm`,-.9);
+    S.r.m1 = el('g',{},S.fill);
+  },
+  steps(p){ const {A,b,c,e}=p, s=(A-c)/2, T=b+e, Ans=this.ans(p); return [
+    {say:`T자 모양 도형이에요. 가로 ${A} cm, 전체 높이 ${T} cm예요. 한 번에 넓이를 구하기 어려우니 <b>직사각형으로 나누어</b> 생각해 봐요.`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`점선을 따라 자르면 직사각형 두 개가 생겨요. 위쪽을 <span class="r">①</span>, 아래쪽을 <span class="g">②</span>라고 할게요.`,
+     run:async S=>{ const g=S.r.m1; const cut=hl(S.over,s,b,s,b,'cut'); cut._c=[s,b,s+c,b]; await grow(cut,600);
+       const f1=setO(rect(0,0,A,b,'fillA',g),0), f2=setO(rect(s,b,c,e,'fillB',g),0);
+       S.r.b1=txt(A/2,b/2,'①','badge',g); S.r.b2=txt(s+c/2,b+e/2,'②','badge',g);
+       setO(S.r.b1,0); setO(S.r.b2,0); await fade([f1,f2,S.r.b1,S.r.b2],1,500); }},
+    {say:`<span class="r">①</span>은 가로 ${A} cm, 세로 ${b} cm인 직사각형이에요. 1 cm² 정사각형이 ${A}개씩 ${b}줄 있으니까 ${A} × ${b} = ${A*b} cm²예요.`,
+     note:`① = ${A} × ${b} = ${A*b} cm²`,
+     run:async S=>{ const G=cells(S.r.m1,0,0,A,b,'c1'); S.r.m1.appendChild(S.r.b1); await reveal(G,1300);
+       S.r.b1.setAttribute('y',b/2-.38); txt(A/2,b/2+.42,`${A*b} cm²`,'badge',S.r.m1); }},
+    {say:`<span class="g">②</span>의 세로는 적혀 있지 않아요. 전체 높이 ${T} cm에서 ①의 세로 ${b} cm를 빼면 돼요. ${T} − ${b} = ${e} cm!`,
+     note:`②의 세로 = ${T} − ${b} = ${e} cm`,
+     run:async S=>{ const D=setO(dim(S.lab,s+c,b,s+c,T,'? cm',.9,'vio'),0); await fade(D,1,400); await wait(700);
+       D._t.textContent=`${e} cm`; D.setAttribute('class','dim acc'); }},
+    {say:`<span class="g">②</span>는 가로 ${c} cm, 세로 ${e} cm인 직사각형이에요. ${c} × ${e} = ${c*e} cm²예요.`,
+     note:`② = ${c} × ${e} = ${c*e} cm²`,
+     run:async S=>{ const G=cells(S.r.m1,s,b,c,e,'c2'); S.r.m1.appendChild(S.r.b2); await reveal(G,1100);
+       S.r.b2.setAttribute('y',b+e/2-.4); txt(s+c/2,b+e/2+.4,`${c*e}`,'badge',S.r.m1); }},
+    {final:true,
+     say:`두 넓이를 더하면 T자 모양의 넓이는 ${A*b} + ${c*e} = <b>${Ans} cm²</b>예요. 다음 단계에서 다른 방법으로도 확인해 봐요!`,
+     note:`넓이 = ① + ② = ${A*b} + ${c*e} = <b>${Ans} cm²</b>`,
+     run:async S=>{ const o=setO(el('polygon',{points:[[0,0],[A,0],[A,b],[s+c,b],[s+c,T],[s,T],[s,b],[0,b]].map(q=>q.join(',')).join(' '),class:'hlrect'},S.over),0); await fade(o,1,500); }},
+    {say:`<b>다른 방법</b>: 가로 ${A} cm, 세로 ${T} cm인 큰 직사각형을 그려요. 그러면 T자 양옆에 <span class="o">빈 곳</span> 2개가 생겨요.`,
+     note:`큰 직사각형 = ${A} × ${T} = ${A*T} cm²`,
+     run:async S=>{ S.over.querySelectorAll('.hlrect').forEach(e=>e.remove());
+       await fade(S.r.m1,.12,400);
+       const box=setO(rect(0,0,A,T,'outline-dash',S.over),0);
+       const g=S.r.x=el('g',{},S.over);
+       S.r.xl=el('g',{},g); S.r.xr=el('g',{},g);
+       rect(0,b,s,e,'fillX',S.r.xl); S.r.tl=txt(s/2,b+e/2,'빈 곳','badge',S.r.xl);
+       rect(s+c,b,s,e,'fillX',S.r.xr); S.r.tr=txt(s+c+s/2,b+e/2,'빈 곳','badge',S.r.xr);
+       setO(g,0); await all(fade(box,1,500),fade(g,1,700)); }},
+    {say:`<span class="o">빈 곳</span> 하나는 가로 ${s} cm, 세로 ${e} cm이니까 ${s*e} cm²예요. 큰 직사각형에서 빈 곳 2개를 빼면 <b>똑같이 ${Ans} cm²</b>가 나와요.`,
+     note:`${A*T} − ${s*e} × 2 = <b>${Ans} cm²</b> ✔ 같은 답!`,
+     run:async S=>{ S.r.tl.textContent=`${s*e}`; S.r.tr.textContent=`${s*e}`; await wait(500);
+       await all(shift([{g:S.r.xl,x:-1.2,y:.6},{g:S.r.xr,x:1.2,y:.6}],900),fade(S.r.x,.25,900)); }},
+  ];}
+};
+
+P.cross = {
+  name:'십자 길 꽃밭', kind:'넓이', unit:'cm²', m:[2.9,1.8,1.6,2.9],
+  legend:[['field','꽃밭'],['road','길'],['c3','겹친 곳']],
+  sample:{W:12,H:8,r:2,q:1,x:5,y:3},
+  gen(){ const W=ri(10,14), H=ri(7,10), r=ri(1,2), q=ri(1,2); return {W,H,r,q,x:ri(3,W-r-3),y:ri(2,H-q-2)}; },
+  size:p=>[p.W,p.H],
+  ans:p=>(p.W-p.r)*(p.H-p.q),
+  q:p=>`직사각형 꽃밭에 길이 십자 모양으로 났어요. 길을 뺀 꽃밭의 넓이는 몇 cm²일까요?`,
+  hint(p,v){ const {W,H,r,q}=p; if(v===W*H-r*H-W*q) return '아까워요! 두 길이 겹치는 작은 사각형을 두 번 뺐어요.'; if(v===W*H) return '길의 넓이도 들어 있어요. 길을 빼야 해요!'; if(v===(W-r)*(H-q)+r*q) return '겹친 부분을 다시 생각해 봐요. 조각을 모아 보면 쉬워요.'; },
+  build(p,S){ const {W,H,r,q,x,y}=p;
+    const mk=(X,Y,w,h)=>{ const g=el('g',{},S.base); rect(X,Y,w,h,'field',g); return g; };
+    S.r.TL=mk(0,0,x,y); S.r.TR=mk(x+r,0,W-x-r,y); S.r.BL=mk(0,y+q,x,H-y-q); S.r.BR=mk(x+r,y+q,W-x-r,H-y-q);
+    const rd=S.r.road=el('g',{},S.base);
+    rect(x,0,r,H,'road',rd); rect(0,y,W,q,'road',rd);
+    seg(x+r/2,0,x+r/2,y,'roadline',rd); seg(x+r/2,y+q,x+r/2,H,'roadline',rd);
+    seg(0,y+q/2,x,y+q/2,'roadline',rd); seg(x+r,y+q/2,W,y+q/2,'roadline',rd);
+    S.r.out=rect(0,0,W,H,'outline',S.base);
+    dim(S.lab,0,0,W,0,`${W} cm`,-.9);
+    dim(S.lab,0,0,0,H,`${H} cm`,-.9);
+    dim(S.lab,x,H,x+r,H,`${r} cm`,.9);
+    dim(S.lab,W,y,W,y+q,`${q} cm`,.9);
+  },
+  steps(p){ const {W,H,r,q,x,y}=p, A=this.ans(p); return [
+    {say:`가로 ${W} cm, 세로 ${H} cm인 꽃밭에 폭이 ${r} cm, ${q} cm인 길이 십자 모양으로 났어요. 길을 뺀 <b>초록색 꽃밭</b>의 넓이는 몇 cm²일까요?`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`길을 걷어내 볼게요. 꽃밭은 네 조각으로 나뉘어 있어요. 이 조각들을 <b>빈틈없이 모으면</b> 어떻게 될까요?`,
+     run:async S=>{ await fade([S.r.road,S.r.out],.15,700); }},
+    {say:`오른쪽 두 조각을 왼쪽으로 ${r} cm 밀어서 붙여요. 세로 길이 사라졌으니 가로는 ${W} − ${r} = <b>${W-r} cm</b>가 돼요.`,
+     note:`새 가로 = ${W} − ${r} = ${W-r} cm`,
+     run:async S=>{ await shift([{g:S.r.TR,x:-r,y:0},{g:S.r.BR,x:-r,y:0}],1000);
+       const D=setO(dim(S.lab,0,0,W-r,0,`${W-r} cm`,-1.9,'acc'),0); await fade(D,1,450); }},
+    {say:`이번엔 아래쪽 두 조각을 위로 ${q} cm 밀어 올려요. 가로 길이 사라졌으니 세로는 ${H} − ${q} = <b>${H-q} cm</b>가 돼요.`,
+     note:`새 세로 = ${H} − ${q} = ${H-q} cm`,
+     run:async S=>{ await shift([{g:S.r.BL,x:0,y:-q},{g:S.r.BR,x:-r,y:-q}],1000);
+       const D=setO(dim(S.lab,0,0,0,H-q,`${H-q} cm`,-1.9,'acc'),0); await fade(D,1,450); }},
+    {final:true,
+     say:`조각들이 모여 가로 ${W-r} cm, 세로 ${H-q} cm인 <b>직사각형 하나</b>가 되었어요! 넓이는 ${W-r} × ${H-q} = <b>${A} cm²</b>예요.`,
+     note:`넓이 = ${W-r} × ${H-q} = <b>${A} cm²</b>`,
+     run:async S=>{ const box=setO(rect(0,0,W-r,H-q,'hlrect',S.over),0); S.r.box=box; await fade(box,1,400);
+       S.r.cells=cells(S.over,0,0,W-r,H-q,'cw'); await reveal(S.r.cells,1400); }},
+    {say:`검산해 볼까요? 전체 넓이에서 두 길의 넓이를 빼요. 그런데 두 길이 <span class="v">겹치는 곳</span>(${r} × ${q})은 두 번 빠지니까 한 번 더해 줘야 해요!`,
+     note:`${W*H} − ${r*H} − ${W*q} + ${r*q} = <b>${A} cm²</b> ✔ 같은 답!`,
+     run:async S=>{ await fade([S.r.box,S.r.cells],0,350);
+       await shift([{g:S.r.TR,x:0,y:0},{g:S.r.BR,x:0,y:0},{g:S.r.BL,x:0,y:0}],900);
+       await fade([S.r.road,S.r.out],1,500);
+       const o=setO(rect(x,y,r,q,'fillV',S.over),0); await fade(o,1,400);
+       if(!INSTANT && !reduce){ for(let i=0;i<2;i++){ await fade(o,.2,250); await fade(o,1,250); } } }},
+  ];}
+};
+
+P.ell = {
+  name:'L자 모양', kind:'넓이', unit:'cm²', m:[1.8,1.8,1.6,1.8],
+  legend:[['c1','①'],['c2','②'],['c4','빈 곳']],
+  sample:{W:10,H:8,a:3,t:3},
+  gen(){ const W=ri(8,12), H=ri(7,10); return {W,H,a:ri(2,4),t:ri(2,3)}; },
+  size:p=>[p.W,p.H],
+  ans:p=>p.a*(p.H-p.t)+p.W*p.t,
+  q:p=>`직사각형 두 개가 L자 모양으로 붙어 있어요. 이 도형의 넓이는 몇 cm²일까요?`,
+  hint(p,v){ const {W,H,a,t}=p; if(v===W*H) return '빈 곳까지 넓이에 넣었어요. 오른쪽 위의 빈 곳을 빼야 해요!'; if(v===a*H+W*t) return '두 직사각형이 겹치는 부분을 두 번 셌어요. 겹치지 않게 잘라 봐요.'; },
+  build(p,S){ const {W,H,a,t}=p;
+    poly([[0,0],[a,0],[a,H-t],[W,H-t],[W,H],[0,H]],'shape',S.base);
+    dim(S.lab,0,0,a,0,`${a} cm`,-.9);
+    dim(S.lab,0,0,0,H,`${H} cm`,-.9);
+    dim(S.lab,0,H,W,H,`${W} cm`,.9);
+    dim(S.lab,W,H-t,W,H,`${t} cm`,.9);
+    S.r.m1=el('g',{},S.fill);
+  },
+  steps(p){ const {W,H,a,t}=p, h=H-t, A=this.ans(p); return [
+    {say:`L자 모양 도형이에요. 직사각형이 아니라서 바로 가로 × 세로를 할 수 없어요. <b>직사각형 두 개로 나누어</b> 볼까요?`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`점선을 따라 가로로 자르면 위쪽 <span class="r">①</span>과 아래쪽 <span class="g">②</span>, 직사각형 두 개가 돼요.`,
+     run:async S=>{ const g=S.r.m1, cut=hl(S.over,0,h,0,h,'cut'); cut._c=[0,h,a,h]; S.r.cut=cut; await grow(cut,500);
+       const f1=setO(rect(0,0,a,h,'fillA',g),0), f2=setO(rect(0,h,W,t,'fillB',g),0);
+       S.r.b1=setO(txt(a/2,h/2,'①','badge',g),0); S.r.b2=setO(txt(W/2+a/2,h+t/2,'②','badge',g),0);
+       await fade([f1,f2,S.r.b1,S.r.b2],1,500); }},
+    {say:`<span class="r">①</span>의 세로는 적혀 있지 않아요. 전체 세로 ${H} cm에서 ②의 세로 ${t} cm를 빼면 ${H} − ${t} = ${h} cm예요. 그래서 ①은 ${a} × ${h} = ${a*h} cm²예요.`,
+     note:`① = ${a} × (${H} − ${t}) = ${a} × ${h} = ${a*h} cm²`,
+     run:async S=>{ const D=setO(dim(S.lab,a,0,a,h,'? cm',.9,'vio'),0); S.r.dh=D; await fade(D,1,400); await wait(600);
+       D._t.textContent=`${h} cm`; D.setAttribute('class','dim acc');
+       const G=cells(S.r.m1,0,0,a,h,'c1'); S.r.m1.appendChild(S.r.b1); await reveal(G,1100);
+       S.r.b1.setAttribute('y',h/2-.4); txt(a/2,h/2+.4,`${a*h}`,'badge',S.r.m1); }},
+    {say:`<span class="g">②</span>는 가로 ${W} cm, 세로 ${t} cm예요. ${W} × ${t} = ${W*t} cm²예요.`,
+     note:`② = ${W} × ${t} = ${W*t} cm²`,
+     run:async S=>{ const G=cells(S.r.m1,0,h,W,t,'c2'); S.r.m1.appendChild(S.r.b2); await reveal(G,1100);
+       S.r.b2.textContent=`② ${W*t} cm²`; }},
+    {final:true,
+     say:`두 넓이를 더하면 L자 모양의 넓이는 ${a*h} + ${W*t} = <b>${A} cm²</b>예요. 다음 단계에서 다르게 잘라 볼게요!`,
+     note:`넓이 = ① + ② = ${a*h} + ${W*t} = <b>${A} cm²</b>`,
+     run:async S=>{ const o=setO(el('polygon',{points:[[0,0],[a,0],[a,h],[W,h],[W,H],[0,H]].map(q=>q.join(',')).join(' '),class:'hlrect'},S.over),0); S.r.o=o; await fade(o,1,500); }},
+    {say:`<b>다른 방법 1</b>: 이번엔 세로로 잘라요. 왼쪽 <span class="r">③</span>은 ${a} × ${H} = ${a*H} cm², 오른쪽 <span class="g">④</span>는 가로가 ${W} − ${a} = ${W-a} cm이니까 ${W-a} × ${t} = ${(W-a)*t} cm²예요.`,
+     note:`③ + ④ = ${a*H} + ${(W-a)*t} = <b>${A} cm²</b> ✔`,
+     run:async S=>{ await fade([S.r.m1,S.r.o,S.r.cut,S.r.dh],0,400);
+       const g=S.r.m2=el('g',{},S.fill), cut=hl(S.over,a,h,a,h,'cut'); cut._c=[a,h,a,H]; S.r.cut2=cut; await grow(cut,500);
+       const f1=setO(rect(0,0,a,H,'fillA',g),0), f2=setO(rect(a,h,W-a,t,'fillB',g),0);
+       const t1=setO(txt(a/2,H/2,`③ ${a*H}`,'badge',g),0), t2=setO(txt((a+W)/2,h+t/2,`④ ${(W-a)*t}`,'badge',g),0);
+       await fade([f1,f2,t1,t2],1,600); }},
+    {say:`<b>다른 방법 2</b>: 가로 ${W} cm, 세로 ${H} cm인 큰 직사각형에서 오른쪽 위 <span class="o">빈 곳</span>(${W-a} × ${h} = ${(W-a)*h} cm²)을 빼도 같은 답이 나와요.`,
+     note:`${W} × ${H} − ${W-a} × ${h} = ${W*H} − ${(W-a)*h} = <b>${A} cm²</b> ✔`,
+     run:async S=>{ await fade([S.r.m2,S.r.cut2],.12,400);
+       const box=setO(rect(0,0,W,H,'outline-dash',S.over),0);
+       const g=setO(el('g',{},S.over),0); rect(a,0,W-a,h,'fillX',g); txt((a+W)/2,h/2,`빈 곳 ${(W-a)*h}`,'badge',g);
+       await all(fade(box,1,500),fade(g,1,600)); await wait(500);
+       await all(shift([{g,x:.8,y:-.8}],900),fade(g,.3,900)); }},
+  ];}
+};
+
+P.dieut = {
+  name:'ㄷ자 모양', kind:'넓이', unit:'cm²', m:[1.8,1.8,1.6,1.8],
+  legend:[['c1','큰 직사각형'],['c4','빈 곳']],
+  sample:{W:10,H:9,t1:3,t2:2,d:6},
+  gen(){ const W=ri(8,12), t1=ri(2,3), t2=ri(2,3), H=ri(t1+t2+2,10); return {W,H,t1,t2,d:ri(4,W-2)}; },
+  size:p=>[p.W,p.H],
+  ans:p=>p.W*p.H-p.d*(p.H-p.t1-p.t2),
+  q:p=>`직사각형의 오른쪽이 ㄷ자 모양으로 파여 있어요. 이 도형의 넓이는 몇 cm²일까요?`,
+  hint(p,v){ const {W,H,t1,t2,d}=p; if(v===W*H) return '파인 곳까지 넓이에 넣었어요. 빈 곳을 빼야 해요!'; if(v===W*H-d*H) return '빈 곳의 세로를 전체 높이로 계산했어요. 위아래 두께를 빼 봐요.'; },
+  build(p,S){ const {W,H,t1,t2,d}=p, a=W-d, h=H-t1-t2;
+    poly([[0,0],[W,0],[W,t1],[a,t1],[a,H-t2],[W,H-t2],[W,H],[0,H]],'shape',S.base);
+    dim(S.lab,0,0,W,0,`${W} cm`,-.9);
+    dim(S.lab,0,0,0,H,`${H} cm`,-.9);
+    dim(S.lab,W,0,W,t1,`${t1} cm`,.9);
+    dim(S.lab,W,H-t2,W,H,`${t2} cm`,.9);
+    S.r.dd=dim(S.lab,a,t1+h/2,W,t1+h/2,`${d} cm`,0);
+    S.r.m1=el('g',{},S.fill);
+  },
+  steps(p){ const {W,H,t1,t2,d}=p, a=W-d, h=H-t1-t2, A=this.ans(p); return [
+    {say:`ㄷ자 모양 도형이에요. 오른쪽이 ${d} cm만큼 파여 있어요. 이번에는 <b>큰 직사각형에서 빈 곳을 빼는</b> 방법으로 풀어 봐요.`,
+     run:async S=>{ await fade(S.c,1,500); }},
+    {say:`파인 곳을 채워서 가로 ${W} cm, 세로 ${H} cm인 <span class="r">큰 직사각형</span>을 만들어요. 1 cm² 칸이 ${W}개씩 ${H}줄이니까 ${W} × ${H} = ${W*H} cm²예요.`,
+     note:`큰 직사각형 = ${W} × ${H} = ${W*H} cm²`,
+     run:async S=>{ const box=setO(rect(0,0,W,H,'outline-dash',S.over),0); S.r.box=box; await fade(box,1,400);
+       const G=cells(S.r.m1,0,0,W,H,'c1'); await reveal(G,1500);
+       S.r.slot=el('g',{},S.over); rect(a,t1,d,h,'fillX',S.r.slot); S.over.appendChild(S.r.slot); setO(S.r.slot,0); }},
+    {say:`이제 <span class="o">빈 곳</span>을 찾아요. 빈 곳의 가로는 ${d} cm예요. 세로는 전체 ${H} cm에서 위 ${t1} cm, 아래 ${t2} cm를 빼면 ${H} − ${t1} − ${t2} = ${h} cm예요.`,
+     note:`빈 곳의 세로 = ${H} − ${t1} − ${t2} = ${h} cm`,
+     run:async S=>{ await fade(S.r.slot,1,500);
+       const D=setO(dim(S.lab,W,t1,W,H-t2,'? cm',.9,'vio'),0); await fade(D,1,400); await wait(600);
+       D._t.textContent=`${h} cm`; D.setAttribute('class','dim acc'); }},
+    {say:`<span class="o">빈 곳</span>의 넓이는 ${d} × ${h} = ${d*h} cm²예요.`,
+     note:`빈 곳 = ${d} × ${h} = ${d*h} cm²`,
+     run:async S=>{ await fade(S.r.dd,0,250); const T=setO(txt(a+d/2,t1+h/2,`빈 곳 ${d*h}`,'badge',S.r.slot),0); await fade(T,1,400); }},
+    {final:true,
+     say:`큰 직사각형에서 빈 곳을 빼면 ${W*H} − ${d*h} = <b>${A} cm²</b>예요. 빈 곳이 쏙 빠져나가는 것을 보세요!`,
+     note:`넓이 = ${W*H} − ${d*h} = <b>${A} cm²</b>`,
+     run:async S=>{ await pulse([]); await fade(S.r.slot,0,900);
+       const G=S.r.m1.firstChild; G._cells.forEach(c=>{ const x=+c.getAttribute('x'), y=+c.getAttribute('y'); if(x>a && y>t1 && y<H-t2) c.style.opacity=0; }); }},
+    {say:`<b>다른 방법</b>: 직사각형 세 개로 나누어도 돼요. 위 ${W} × ${t1} = ${W*t1}, 왼쪽 가운데 ${a} × ${h} = ${a*h}, 아래 ${W} × ${t2} = ${W*t2}. 모두 더해도 같은 답이에요.`,
+     note:`${W*t1} + ${a*h} + ${W*t2} = <b>${A} cm²</b> ✔`,
+     run:async S=>{ await fade([S.r.m1,S.r.slot,S.r.box],0,400);
+       const g=el('g',{},S.fill); setO(g,0);
+       rect(0,0,W,t1,'fillA',g); rect(0,t1,a,h,'fillB',g); rect(0,H-t2,W,t2,'fillA',g);
+       seg(0,t1,W,t1,'hl cut',g); seg(0,H-t2,W,H-t2,'hl cut',g);
+       txt(W/2,t1/2,`${W*t1}`,'badge',g); txt(a/2,t1+h/2,`${a*h}`,'badge',g); txt(W/2,H-t2/2,`${W*t2}`,'badge',g);
+       await fade(g,1,700); }},
+  ];}
+};
+
+/* ---------- 화면 제어 ---------- */
+const ORDER = ['notch','stairs','ell','tee','dieut','cross'];
+const params = {}; ORDER.forEach(id=>params[id]=P[id].sample);
+let cur = 'notch', step = 0, steps = [], playing = false, timer = 0;
+
+function makeStage(prob,p){
+  svg.innerHTML='';
+  const [W,H]=prob.size(p), [mt,mr,mb,ml]=prob.m;
+  const vx=-ml, vy=-mt, vw=W+ml+mr, vh=H+mt+mb;
+  svg.setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
+  const grid=el('g',{class:'grid'},svg);
+  for(let i=Math.ceil(vx);i<=vx+vw;i++) seg(i,vy,i,vy+vh,'',grid);
+  for(let j=Math.ceil(vy);j<=vy+vh;j++) seg(vx,j,vx+vw,j,'',grid);
+  const c=el('g',{},svg);
+  const S={c, base:el('g',{},c), fill:el('g',{},c), over:el('g',{},c), lab:el('g',{},c), r:{}};
+  setO(c,0);
+  prob.build(p,S);
+  return S;
+}
+
+async function render(k){
+  const my=++RUN; step=k; updatePanel();
+  const prob=P[cur], S=makeStage(prob,params[cur]);
+  INSTANT=true;
+  for(let i=0;i<k;i++) await steps[i].run(S);
+  if(my!==RUN) return;
+  INSTANT=false;
+  await steps[k].run(S);
+  if(my!==RUN) return;
+  if(playing){
+    if(step<steps.length-1) timer=setTimeout(()=>render(step+1),1500);
+    else setPlaying(false);
+  }
+}
+
+function updatePanel(){
+  const prob=P[cur], p=params[cur], st=steps[step];
+  $('stepno').textContent=`${step+1} / ${steps.length} 단계`;
+  $('say').innerHTML=st.say;
+  const ns=steps.slice(0,step+1).filter(s=>s.note);
+  $('notes').innerHTML = ns.length ? '<ol>'+ns.map(s=>`<li>${s.note}</li>`).join('')+'</ol>'
+    : '<p class="empty">풀이를 진행하면 여기에 식이 차곡차곡 쌓여요.</p>';
+  $('dots').innerHTML = steps.map((_,i)=>`<button type="button" aria-label="${i+1}단계로" class="${i<=step?'on':''}" data-k="${i}"></button>`).join('');
+  $('prev').disabled = step===0;
+  const last = step===steps.length-1;
+  $('next').textContent = last ? '🎲 새 숫자로' : '다음 ▶';
+  const fi = steps.findIndex(s=>s.final), chip=$('chip');
+  const show = step>=fi;
+  if(show && chip.hidden){ chip.textContent=`정답 ${prob.ans(p)} ${prob.unit}`; chip.hidden=false; }
+  else if(!show) chip.hidden=true;
+}
+
+function loadProblem(id, keepParams){
+  clearTimeout(timer); setPlaying(false);
+  cur=id; const prob=P[id];
+  if(!keepParams) params[id]=prob.gen();
+  steps=prob.steps(params[id]);
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.id===id)));
+  $('kind').textContent=prob.kind; $('kind').className='kind '+(prob.kind==='둘레'?'per':'area');
+  $('ptitle').textContent=prob.name; $('pq').textContent=prob.q(params[id]);
+  $('unit').textContent=prob.unit; $('ans').value=''; $('fb').textContent=''; $('fb').className='fb';
+  $('chip').hidden=true;
+  $('legend').innerHTML=prob.legend.map(([c,l])=>`<span><i style="background:var(--${c})"></i>${l}</span>`).join('');
+  svg.setAttribute('aria-label',`${prob.name} 도형 그림`);
+  render(0);
+}
+
+function setPlaying(on){ playing=on; $('play').textContent = on ? '⏸ 멈춤' : '▶ 자동'; if(!on) clearTimeout(timer); }
+function go(k){ clearTimeout(timer); if(k<0||k>=steps.length) return; render(k); }
+
+$('next').onclick=()=>{ setPlaying(false); if(step===steps.length-1) loadProblem(cur,false); else go(step+1); };
+$('prev').onclick=()=>{ setPlaying(false); go(step-1); };
+$('play').onclick=()=>{ if(playing){ setPlaying(false); return; } setPlaying(true); go(step===steps.length-1?0:step+1); };
+$('dots').onclick=e=>{ const b=e.target.closest('button'); if(b){ setPlaying(false); go(+b.dataset.k); } };
+$('shuffle').onclick=()=>loadProblem(cur,false);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ if(location.hash!=='#'+t.dataset.id) location.hash=t.dataset.id; else loadProblem(t.dataset.id,true); });
+window.addEventListener('hashchange',()=>{ const id=location.hash.slice(1); if(P[id]) loadProblem(id,true); });
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,textarea')) return;
+  if(e.key==='ArrowRight' && step<steps.length-1){ setPlaying(false); go(step+1); }
+  if(e.key==='ArrowLeft'){ setPlaying(false); go(step-1); }
+});
+$('tryform').addEventListener('submit',e=>{
+  e.preventDefault();
+  const raw=$('ans').value.trim(), fb=$('fb'), prob=P[cur], p=params[cur];
+  if(!raw){ fb.className='fb bad'; fb.textContent='답을 숫자로 적어 주세요.'; return; }
+  const v=Number(raw.replace(/[^0-9.]/g,''));
+  if(v===prob.ans(p)){ fb.className='fb ok'; fb.textContent='정답이에요! 🎉 풀이를 보면서 내 방법과 비교해 봐요.'; }
+  else { fb.className='fb bad'; fb.textContent=(prob.hint&&prob.hint(p,v)) || '아쉬워요. ‘다음 ▶’을 눌러 풀이를 한 단계씩 따라가 봐요.'; }
+});
+
+const start=location.hash.slice(1);
+loadProblem(P[start]?start:'notch',true);
+})();
+</script>
