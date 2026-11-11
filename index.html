@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>둘레와 넓이 탐험</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,6 +62,24 @@ h1 .m{color:var(--c1)} h1 .n{color:var(--c2)}
 .ghost:hover{border-color:var(--muted)}
 .q{margin:0 0 4px;color:var(--muted)}
 #stage{width:100%;height:auto;max-height:560px;display:block;touch-action:manipulation}
+#istage{width:100%;height:auto;max-height:300px;display:block}
+.intro{margin-block:6px 8px}
+.intro-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px 20px}
+.intro-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:10px}
+.intro-head h2{font-family:var(--f-disp);font-weight:400;font-size:1.5rem;margin:.1em 0}
+.intro-head h2 .r{color:var(--c1)} .intro-head h2 .g{color:var(--c2)}
+.intro-head h2 .vs{color:var(--muted);font-size:.75em;margin:0 .25em}
+.itabs{display:flex;gap:8px;margin-left:auto}
+.itab{font:inherit;font-weight:700;font-size:.9rem;padding:8px 14px;border-radius:99px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.itab:hover{border-color:var(--muted)}
+.itab[aria-selected="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.intro-lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:center}
+@media (max-width:760px){.intro-lab{grid-template-columns:minmax(0,1fr)}}
+.intro-note{display:flex;flex-direction:column;gap:12px;min-width:0}
+.isay{font-size:1.08rem;margin:0;min-height:6em}
+.isay b{color:var(--accent)}
+.isay .r{color:var(--c1);font-weight:700} .isay .g{color:var(--c2);font-weight:700}
+.intro-controls{display:flex;gap:8px;flex-wrap:wrap}
 .board-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.85rem;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px}
 .legend i{display:inline-block;width:18px;height:5px;border-radius:3px;vertical-align:middle;margin-right:5px}
@@ -102,31 +121,32 @@ h1 .m{color:var(--c1)} h1 .n{color:var(--c2)}
 .idea p{margin:0;font-size:.93rem;color:var(--muted)}
 .idea.i1{border-top-color:var(--c1)} .idea.i2{border-top-color:var(--c2)} .idea.i3{border-top-color:var(--c4)} .idea.i4{border-top-color:var(--c3)}
 
-/* SVG */
-#stage .grid line{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke}
-#stage .shape{fill:var(--shape);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-#stage .hl{fill:none;stroke-width:7;stroke-linecap:round;vector-effect:non-scaling-stroke}
-#stage .hl.c1{stroke:var(--c1)} #stage .hl.c2{stroke:var(--c2)} #stage .hl.c3{stroke:var(--c3)}
-#stage .hl.cut{stroke:var(--ink);stroke-width:.09;stroke-dasharray:.28 .18;stroke-linecap:butt;vector-effect:none}
-#stage .dim-line{stroke:var(--muted);stroke-width:1.2;vector-effect:non-scaling-stroke}
-#stage .dim-text{font-family:var(--f-body);font-weight:700;font-size:.52px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.22px;stroke-linejoin:round}
-#stage .dim.acc .dim-line{stroke:var(--accent)} #stage .dim.acc .dim-text{fill:var(--accent)}
-#stage .dim.vio .dim-line{stroke:var(--c3)} #stage .dim.vio .dim-text{fill:var(--c3)}
-#stage .qmark{font-family:var(--f-disp);font-size:.62px;fill:var(--c3);text-anchor:middle;dominant-baseline:central}
-#stage .fillA{fill:var(--c1);fill-opacity:.16}
-#stage .fillB{fill:var(--c2);fill-opacity:.16}
-#stage .fillX{fill:var(--c4);fill-opacity:.32;stroke:var(--c4);stroke-width:2;vector-effect:non-scaling-stroke}
-#stage .fillV{fill:var(--c3);fill-opacity:.55}
-#stage .cell{fill-opacity:.5}
-#stage .cell.c1{fill:var(--c1)} #stage .cell.c2{fill:var(--c2)} #stage .cell.cw{fill:var(--card);fill-opacity:.55}
-#stage .badge{font-family:var(--f-disp);font-size:.62px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.2px;stroke-linejoin:round}
-#stage .field{fill:var(--field);stroke:var(--field-edge);stroke-width:1.5;vector-effect:non-scaling-stroke}
-#stage .road{fill:var(--road)}
-#stage .roadline{stroke:var(--card);stroke-width:.07;stroke-dasharray:.3 .25}
-#stage .outline{fill:none;stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke}
-#stage .outline-dash{fill:none;stroke:var(--accent);stroke-width:.08;stroke-dasharray:.28 .16}
-#stage .hlrect{fill:none;stroke:var(--accent);stroke-width:5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-#stage .pulse{animation:pulse .5s ease-in-out 2}
+/* SVG (shared by #stage and #istage via .stage-svg) */
+.stage-svg .grid line{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke}
+.stage-svg .shape{fill:var(--shape);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.stage-svg .hl{fill:none;stroke-width:7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.stage-svg .hl.c1{stroke:var(--c1)} .stage-svg .hl.c2{stroke:var(--c2)} .stage-svg .hl.c3{stroke:var(--c3)}
+.stage-svg .hl.cut{stroke:var(--ink);stroke-width:.09;stroke-dasharray:.28 .18;stroke-linecap:butt;vector-effect:none}
+.stage-svg .dim-line{stroke:var(--muted);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.stage-svg .dim-text{font-family:var(--f-body);font-weight:700;font-size:.52px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.22px;stroke-linejoin:round}
+.stage-svg .dim.acc .dim-line{stroke:var(--accent)} .stage-svg .dim.acc .dim-text{fill:var(--accent)}
+.stage-svg .dim.vio .dim-line{stroke:var(--c3)} .stage-svg .dim.vio .dim-text{fill:var(--c3)}
+.stage-svg .qmark{font-family:var(--f-disp);font-size:.62px;fill:var(--c3);text-anchor:middle;dominant-baseline:central}
+.stage-svg .fillA{fill:var(--c1);fill-opacity:.16}
+.stage-svg .fillB{fill:var(--c2);fill-opacity:.16}
+.stage-svg .fillX{fill:var(--c4);fill-opacity:.32;stroke:var(--c4);stroke-width:2;vector-effect:non-scaling-stroke}
+.stage-svg .fillV{fill:var(--c3);fill-opacity:.55}
+.stage-svg .cell{fill-opacity:.5}
+.stage-svg .cell.c1{fill:var(--c1)} .stage-svg .cell.c2{fill:var(--c2)} .stage-svg .cell.cw{fill:var(--card);fill-opacity:.55}
+.stage-svg .badge{font-family:var(--f-disp);font-size:.62px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.2px;stroke-linejoin:round}
+.stage-svg .ilen{font-family:var(--f-disp);font-size:.9px;fill:var(--accent);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:.3px;stroke-linejoin:round}
+.stage-svg .field{fill:var(--field);stroke:var(--field-edge);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.stage-svg .road{fill:var(--road)}
+.stage-svg .roadline{stroke:var(--card);stroke-width:.07;stroke-dasharray:.3 .25}
+.stage-svg .outline{fill:none;stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke}
+.stage-svg .outline-dash{fill:none;stroke:var(--accent);stroke-width:.08;stroke-dasharray:.28 .16}
+.stage-svg .hlrect{fill:none;stroke:var(--accent);stroke-width:5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.stage-svg .pulse{animation:pulse .5s ease-in-out 2}
 @keyframes pulse{50%{stroke-width:14}}
 @media (prefers-reduced-motion: reduce){#stage .pulse,.chip{animation:none}}
 </style>
@@ -138,6 +158,30 @@ h1 .m{color:var(--c1)} h1 .n{color:var(--c2)}
     <p class="lede">울퉁불퉁한 도형도 선을 옮기고, 나누고, 빼고, 모으면 쉽게 풀 수 있어요. 문제를 고른 다음 <b>다음 ▶</b>을 눌러 그림이 움직이는 것을 보며 한 단계씩 따라가 보세요.</p>
   </div>
 </header>
+
+<section class="intro" id="intro">
+  <div class="wrap">
+    <div class="intro-card">
+      <div class="intro-head">
+        <h2><span class="r">둘레</span><span class="vs">vs</span><span class="g">넓이</span>, 먼저 알아볼까요?</h2>
+        <div class="itabs" role="tablist" aria-label="개념 선택">
+          <button class="itab" id="itab-per" type="button" data-k="per" aria-selected="true">① 둘레 보기</button>
+          <button class="itab" id="itab-area" type="button" data-k="area" aria-selected="false">② 넓이 보기</button>
+        </div>
+      </div>
+      <div class="intro-lab">
+        <svg id="istage" class="stage-svg" role="img" aria-label="둘레와 넓이 설명 그림"></svg>
+        <div class="intro-note">
+          <p class="isay" id="isay" aria-live="polite"></p>
+          <div class="intro-controls">
+            <button class="btn" id="ireplay" type="button">↺ 다시 보기</button>
+            <button class="btn primary" id="iskip" type="button">문제 풀러 가기 ▾</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <main class="wrap">
   <nav class="tabs" role="tablist" aria-label="문제 고르기">
@@ -175,7 +219,7 @@ h1 .m{color:var(--c1)} h1 .n{color:var(--c2)}
         <button class="ghost" id="shuffle" type="button">🎲 숫자 바꾸기</button>
       </div>
       <p class="q" id="pq"></p>
-      <svg id="stage" role="img" aria-label="도형 그림"></svg>
+      <svg id="stage" class="stage-svg" role="img" aria-label="도형 그림"></svg>
       <div class="board-foot">
         <span class="legend" id="legend"></span>
         <span class="chip" id="chip" hidden></span>
@@ -693,7 +737,101 @@ $('tryform').addEventListener('submit',e=>{
   else { fb.className='fb bad'; fb.textContent=(prob.hint&&prob.hint(p,v)) || '아쉬워요. ‘다음 ▶’을 눌러 풀이를 한 단계씩 따라가 봐요.'; }
 });
 
+/* ---------- 인트로 애니메이션: 둘레 vs 넓이 ----------
+   메인 문제 화면과 타이밍 토큰(RUN)을 공유하면 loadProblem()이 그 값을 바꿔
+   인트로 애니메이션이 멈춰버리므로, 이 블록은 독립된 토큰(itok)을 쓴다. */
+(function(){
+  const isvg = $('istage'), isay = $('isay');
+  const IW = 8, IH = 5;
+  let itok = 0;
+
+  function itween(ms, fn, my){
+    if(reduce || ms<=0){ fn(1); return Promise.resolve(); }
+    return new Promise(res=>{
+      const t0 = performance.now();
+      const f = now => {
+        if(my!==itok) return;
+        const t = Math.min(1,(now-t0)/ms);
+        fn(ease(t));
+        t<1 ? requestAnimationFrame(f) : res();
+      };
+      requestAnimationFrame(f);
+    });
+  }
+  const iwait = (ms,my) => itween(ms,()=>{},my);
+  function igrow(L,ms,my){ const [x1,y1,x2,y2]=L._c; return itween(ms,t=>{ L.setAttribute('x2',lerp(x1,x2,t)); L.setAttribute('y2',lerp(y1,y2,t)); },my); }
+  function ipulse(Ls,my){ Ls=[].concat(Ls); if(reduce) return Promise.resolve(); Ls.forEach(L=>{L.classList.remove('pulse'); void L.getBBox(); L.classList.add('pulse');}); return iwait(1000,my); }
+  function ireveal(G,ms,my){ const a=G._cells; let n=0; return itween(ms,t=>{ const k=Math.round(t*a.length); while(n<k){ a[n].style.opacity=1; n++; } },my); }
+
+  function istageSetup(){
+    isvg.innerHTML = '';
+    const m = 1.1;
+    isvg.setAttribute('viewBox', `${-m} ${-m} ${IW+2*m} ${IH+2*m}`);
+    const grid = el('g',{class:'grid'},isvg);
+    for(let i=0;i<=IW;i++) seg(i,0,i,IH,'',grid);
+    for(let j=0;j<=IH;j++) seg(0,j,IW,j,'',grid);
+    const shape = el('g',{},isvg);
+    rect(0,0,IW,IH,'shape',shape);
+    const over = el('g',{},isvg);
+    return {shape, over};
+  }
+
+  function setITab(k){
+    $('itab-per').setAttribute('aria-selected', String(k==='per'));
+    $('itab-area').setAttribute('aria-selected', String(k==='area'));
+  }
+
+  async function playPerimeter(){
+    const my = ++itok;
+    setITab('per');
+    isay.innerHTML = `도형을 둘러싸고 있는 <b>테두리 선 전체의 길이</b>를 <span class="r">둘레</span>라고 해요. 네 변을 따라가며 길이를 더해 볼게요.`;
+    const {over} = istageSetup();
+    const sides = [[0,0,IW,0,'c1'],[IW,0,IW,IH,'c2'],[IW,IH,0,IH,'c1'],[0,IH,0,0,'c2']];
+    const label = txt(IW/2, IH/2, '0 cm', 'ilen', over);
+    let total = 0;
+    for(const [x1,y1,x2,y2,cls] of sides){
+      if(my!==itok) return;
+      await igrow(hl(over,x1,y1,x2,y2,cls), 650, my);
+      if(my!==itok) return;
+      total += (x1===x2) ? Math.abs(y2-y1) : Math.abs(x2-x1);
+      label.textContent = total+' cm';
+      await iwait(300,my);
+    }
+    if(my!==itok) return;
+    await ipulse([...over.querySelectorAll('.hl')], my);
+    if(my!==itok) return;
+    isay.innerHTML = `가로 ${IW} cm, 세로 ${IH} cm인 변을 두 번씩 더하면 ${IW}+${IH}+${IW}+${IH} = <b>${2*(IW+IH)} cm</b>. 이것이 이 도형의 <span class="r">둘레</span>예요!`;
+  }
+
+  async function playArea(){
+    const my = ++itok;
+    setITab('area');
+    isay.innerHTML = `이번엔 도형 <b>안쪽</b>을 1cm² 모눈 칸으로 가득 채워 볼게요. 칸의 개수가 바로 <span class="g">넓이</span>예요.`;
+    const {shape} = istageSetup();
+    const G = cells(shape,0,0,IW,IH,'c2');
+    await ireveal(G,1300,my);
+    if(my!==itok) return;
+    txt(IW/2,IH/2,`${IW*IH} cm²`,'ilen',shape);
+    isay.innerHTML = `가로 ${IW}개 × 세로 ${IH}줄 = <b>${IW*IH} cm²</b>. 안쪽에 들어가는 1cm² 칸의 개수를 <span class="g">넓이</span>라고 해요!`;
+  }
+
+  function run(k){ k==='per' ? playPerimeter() : playArea(); }
+
+  $('itab-per').onclick = () => run('per');
+  $('itab-area').onclick = () => run('area');
+  $('ireplay').onclick = () => run($('itab-per').getAttribute('aria-selected')==='true' ? 'per' : 'area');
+  $('iskip').onclick = () => document.querySelector('.tabs').scrollIntoView({behavior: reduce?'auto':'smooth', block:'start'});
+
+  (async () => {
+    await playPerimeter();
+    await iwait(1700, itok);
+    if(itok===1) await playArea();
+  })();
+})();
+
 const start=location.hash.slice(1);
 loadProblem(P[start]?start:'notch',true);
 })();
 </script>
+
+</body></html>
